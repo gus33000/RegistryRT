@@ -27,10 +27,7 @@ SOFTWARE.
 using namespace RegistryRT;
 using namespace Platform;
 
-Registry::Registry() {}
-
-void
-Registry::InitNTDLLEntryPoints()
+Registry::Registry()
 {
     NtOpenThread = (LPNTOPENTHREAD)GetProcAddress("NTDLL.DLL", "NtOpenThread");
     if (!NtOpenThread)

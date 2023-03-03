@@ -701,7 +701,6 @@ private:
 
 public:
     Registry();
-    void Registry::InitNTDLLEntryPoints();
 
     RegistryType Registry::GetValueInfo(RegistryHive Hive, Platform::String ^ Key, Platform::String ^ Name, int nSize);
 
