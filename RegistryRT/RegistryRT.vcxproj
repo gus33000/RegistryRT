@@ -303,6 +303,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="NativeRegistry.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Registry.h" />
   </ItemGroup>

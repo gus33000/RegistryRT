@@ -1,26 +1,24 @@
 /*
-MIT License
-
-Copyright (c) 2019 Gustave Monce - @gus33000 - gus33000.me
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright (c) Gustave Monce and Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 #include "pch.h"
 #include "Registry.h"
 
@@ -288,7 +286,7 @@ Registry::IsKeyHidden(RegistryHive Hive, Platform::String ^ Key)
     uKey.Length += 2;
     uKey.MaximumLength += 2;
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -322,7 +320,7 @@ Registry::FindHiddenKeys(RegistryHive Hive, Platform::String ^ Key, Platform::Ar
     UNICODE_STRING uKey;
     RtlInitUnicodeString(&uKey, cKey);
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -332,7 +330,7 @@ Registry::FindHiddenKeys(RegistryHive Hive, Platform::String ^ Key, Platform::Ar
     {
         //
         ULONG resultLength;
-        CHAR szSubkeyInfo[1024];
+        CHAR szSubkeyInfo[1024]{};
         UINT i = 0;
 
         Platform::String ^ csSubkey, ^csNewSubkey;
@@ -397,10 +395,10 @@ Registry::QueryValue(
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
-    HANDLE hKey;
+    HANDLE hKey = nullptr;
 
     NTSTATUS m_NtStatus = NtOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
     if (!NT_SUCCESS(m_NtStatus))
@@ -417,7 +415,7 @@ Registry::QueryValue(
     UNICODE_STRING ValueName;
     RtlInitUnicodeString(&ValueName, cName);
 
-    BYTE *Buffer;
+    BYTE *Buffer = NULL;
     DWORD dwDataSize = 0;
 
     KEY_VALUE_PARTIAL_INFORMATION *info;
@@ -428,7 +426,14 @@ Registry::QueryValue(
     {
         do
         {
-            Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024 + sizeof(WCHAR));
+            if (Buffer)
+            {
+                HeapFree(GetProcessHeap(), 0, Buffer);
+                Buffer = NULL;
+            }
+
+            Buffer = (BYTE *)HeapAlloc(
+                GetProcessHeap(), 0, static_cast<unsigned long long>(dwDataSize) + 1024 + sizeof(WCHAR));
             if (!Buffer)
             {
                 NtClose(hKey);
@@ -444,7 +449,7 @@ Registry::QueryValue(
     }
     else
     {
-        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024);
+        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(dwDataSize) + 1024);
         if (!Buffer)
         {
             NtClose(hKey);
@@ -504,10 +509,10 @@ Registry::QueryValue(
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
-    HANDLE hKey;
+    HANDLE hKey = nullptr;
 
     NTSTATUS m_NtStatus = NtOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
     if (!NT_SUCCESS(m_NtStatus))
@@ -535,7 +540,8 @@ Registry::QueryValue(
     {
         do
         {
-            Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024 + sizeof(WCHAR));
+            Buffer = (BYTE *)HeapAlloc(
+                GetProcessHeap(), 0, static_cast<unsigned long long>(dwDataSize) + 1024 + sizeof(WCHAR));
             if (!Buffer)
             {
                 NtClose(hKey);
@@ -551,7 +557,7 @@ Registry::QueryValue(
     }
     else
     {
-        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024);
+        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(dwDataSize) + 1024);
         if (!Buffer)
         {
             NtClose(hKey);
@@ -621,7 +627,7 @@ Registry::ReadValue(
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -674,7 +680,6 @@ Registry::ReadValue(
     KEY_VALUE_PARTIAL_INFORMATION **retInfo)
 {
     DWORD dwSize = 0;
-RegistryRT:
     ULONG dwType = 0;
     int nSize = 0;
 
@@ -705,7 +710,7 @@ RegistryRT:
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -772,10 +777,10 @@ Registry::GetValueInfo(RegistryHive Hive, Platform::String ^ Key, Platform::Stri
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
-    HANDLE hKey;
+    HANDLE hKey = nullptr;
 
     ULONG ret = NtOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
@@ -793,7 +798,8 @@ Registry::GetValueInfo(RegistryHive Hive, Platform::String ^ Key, Platform::Stri
     {
         do
         {
-            Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024 + sizeof(WCHAR));
+            Buffer = (BYTE *)HeapAlloc(
+                GetProcessHeap(), 0, static_cast<unsigned long long>(dwDataSize) + 1024 + sizeof(WCHAR));
             if (!Buffer)
             {
                 NtClose(hKey);
@@ -806,7 +812,7 @@ Registry::GetValueInfo(RegistryHive Hive, Platform::String ^ Key, Platform::Stri
     }
     else
     {
-        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024);
+        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(dwDataSize) + 1024);
         if (!Buffer)
         {
             NtClose(hKey);
@@ -851,10 +857,10 @@ Registry::GetValueInfo2(RegistryHive Hive, Platform::String ^ Key, Platform::Str
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
-    HANDLE hKey;
+    HANDLE hKey = nullptr;
 
     ULONG ret = NtOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
@@ -872,7 +878,8 @@ Registry::GetValueInfo2(RegistryHive Hive, Platform::String ^ Key, Platform::Str
     {
         do
         {
-            Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024 + sizeof(WCHAR));
+            Buffer = (BYTE *)HeapAlloc(
+                GetProcessHeap(), 0, static_cast<unsigned long long>(dwDataSize) + 1024 + sizeof(WCHAR));
             if (!Buffer)
             {
                 NtClose(hKey);
@@ -885,7 +892,7 @@ Registry::GetValueInfo2(RegistryHive Hive, Platform::String ^ Key, Platform::Str
     }
     else
     {
-        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, dwDataSize + 1024);
+        Buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(dwDataSize) + 1024);
         if (!Buffer)
         {
             NtClose(hKey);
@@ -961,7 +968,7 @@ Registry::ValueExists(RegistryHive Hive, Platform::String ^ Key, Platform::Strin
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -987,12 +994,12 @@ Registry::ValueExists(RegistryHive Hive, Platform::String ^ Key, Platform::Strin
         ValueName.MaximumLength = ValueName.Length += 2;
     }
 
-    WCHAR buffer[8192];
+    WCHAR buffer[1]{};
     DWORD dwSize;
     m_NtStatus = NtQueryValueKey(hKey, &ValueName, KeyValueFullInformation, buffer, sizeof(buffer), &dwSize);
 
     NtClose(hKey);
-    if (!NT_SUCCESS(m_NtStatus))
+    if (!NT_SUCCESS(m_NtStatus) && m_NtStatus != STATUS_BUFFER_TOO_SMALL && m_NtStatus != STATUS_BUFFER_OVERFLOW)
     {
         // Output(DisplayError(m_NtStatus));
 
@@ -1030,7 +1037,7 @@ Registry::GetKeyLastWriteTime(RegistryHive Hive, Platform::String ^ Key, int64 *
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1043,7 +1050,7 @@ Registry::GetKeyLastWriteTime(RegistryHive Hive, Platform::String ^ Key, int64 *
         return FALSE;
     }
 
-    WCHAR buffer[256];
+    WCHAR buffer[256]{};
     KEY_BASIC_INFORMATION *info = (KEY_BASIC_INFORMATION *)buffer;
 
     DWORD dwResultLength;
@@ -1095,7 +1102,7 @@ Registry::GetSubKeyList(RegistryHive Hive, Platform::String ^ Key, Platform::Arr
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1106,10 +1113,10 @@ Registry::GetSubKeyList(RegistryHive Hive, Platform::String ^ Key, Platform::Arr
     }*/
 
     ULONG resultLength;
-    CHAR szKeyInfo[1024];
+    CHAR szKeyInfo[1024]{};
     UINT i = 0;
 
-    Platform::String ^ csSubkey;
+    Platform::String ^ csSubkey = nullptr;
 
     std::vector<Platform::String ^> Subkeys;
 
@@ -1157,7 +1164,7 @@ Registry::GetValueList(RegistryHive Hive, Platform::String ^ Key, Platform::Arra
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1168,10 +1175,10 @@ Registry::GetValueList(RegistryHive Hive, Platform::String ^ Key, Platform::Arra
     }*/
 
     ULONG resultLength;
-    CHAR szValueInfo[1024];
+    CHAR szValueInfo[1024]{};
     UINT i = 0;
 
-    Platform::String ^ csSubkey;
+    Platform::String ^ csSubkey = nullptr;
 
     std::vector<Platform::String ^> Subkeys;
 
@@ -1204,8 +1211,8 @@ Platform::String ^ Registry::GetCurrentUserSID()
     HANDLE hToken = NULL;
     PTOKEN_USER ptiUser = NULL;
     DWORD cbti = 0;
-    SID_NAME_USE snu;
-    UNICODE_STRING StringSid;
+    SID_NAME_USE snu{};
+    UNICODE_STRING StringSid{};
     Platform::String ^ UserSid;
 
     // Get the calling thread's access token.
@@ -1267,7 +1274,7 @@ Registry::WriteValue(
     Platform::String ^ Key,
     Platform::String ^ Name,
     PVOID pValue,
-    RegistryRT::ULONG ulValueLength,
+    ULONG ulValueLength,
     RegistryType dwRegType)
 {
     String ^ hivepath = GetRootPathFor(Hive);
@@ -1290,7 +1297,7 @@ Registry::WriteValue(
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1356,7 +1363,7 @@ Registry::WriteValue(
     Platform::String ^ Key,
     Platform::String ^ Name,
     PVOID pValue,
-    RegistryRT::ULONG ulValueLength,
+    ULONG ulValueLength,
     DWORD dwRegType)
 {
     String ^ hivepath = GetRootPathFor(Hive);
@@ -1379,7 +1386,7 @@ Registry::WriteValue(
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1483,7 +1490,7 @@ Registry::RenameKey(RegistryHive Hive, Platform::String ^ Key, Platform::String 
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     HANDLE hKey = NULL;
@@ -1544,7 +1551,7 @@ Registry::DeleteKey(RegistryHive Hive, Platform::String ^ Key)
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     HANDLE hKey = NULL;
@@ -1598,7 +1605,7 @@ Registry::DeleteKeysRecursive(RegistryHive Hive, Platform::String ^ Key)
     }
 
     // Init the Obj Attirbutes...
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     // Let's do it
@@ -1614,7 +1621,7 @@ Registry::DeleteKeysRecursive(RegistryHive Hive, Platform::String ^ Key)
     }
 
     ULONG resultLength;
-    CHAR szSubkeyInfo[1024];
+    CHAR szSubkeyInfo[1024]{};
 
     Platform::String ^ csSubkey, ^csNewSubkey;
 
@@ -1674,7 +1681,7 @@ Registry::CreateKey(RegistryHive Hive, Platform::String ^ Key)
     UNICODE_STRING uKey;
     RtlInitUnicodeString(&uKey, cKey);
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     // Obvious
@@ -1720,7 +1727,7 @@ Registry::DeleteValue(RegistryHive Hive, Platform::String ^ Key, Platform::Strin
     UNICODE_STRING uKey;
     RtlInitUnicodeString(&uKey, cKey);
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     //
@@ -1780,7 +1787,7 @@ Registry::GetKeyStatus(RegistryHive Hive, Platform::String ^ Key)
         uKey.MaximumLength = uKey.Length += 2;
     }
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     // Obvious
@@ -1831,10 +1838,10 @@ Registry::LoadHive(Platform::String ^ HiveFile, Platform::String ^ MountName, Pl
     UNICODE_STRING uKey;
     RtlInitUnicodeString(&uKey, cKey);
 
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes{};
     InitializeObjectAttributes(&ObjectAttributes, &uHiveFile, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
-    OBJECT_ATTRIBUTES ObjectAttributes2;
+    OBJECT_ATTRIBUTES ObjectAttributes2{};
     InitializeObjectAttributes(&ObjectAttributes2, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     NTSTATUS m_NtStatus = NtLoadKey(&ObjectAttributes2, &ObjectAttributes);
@@ -1870,7 +1877,7 @@ Registry::UnloadHive(Platform::String ^ KeyPath, Platform::Boolean InUser)
     UNICODE_STRING uKey;
     RtlInitUnicodeString(&uKey, cKey);
 
-    OBJECT_ATTRIBUTES ObjectAttributes2;
+    OBJECT_ATTRIBUTES ObjectAttributes2{};
     InitializeObjectAttributes(&ObjectAttributes2, &uKey, OBJ_CASE_INSENSITIVE, 0x00000000, NULL);
 
     NTSTATUS m_NtStatus = NtUnloadKey(&ObjectAttributes2);

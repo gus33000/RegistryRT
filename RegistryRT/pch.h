@@ -1,32 +1,36 @@
 ﻿/*
-MIT License
-
-Copyright (c) 2019 Gustave Monce - @gus33000 - gus33000.me
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright (c) Gustave Monce and Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 //
 // pch.h
 //
 
 #pragma once
+
+#define UMDF_USING_NTSTATUS 1
+
+#include <windows.h>
+#include <winbase.h>
+#include <ntstatus.h>
 
 #include <collection.h>
 #include <ppltasks.h>
@@ -67,6 +71,10 @@ using namespace Platform;
 inline String ^
     Str(UNICODE_STRING US) {
         wchar_t *str = (wchar_t *)malloc(US.Length + sizeof(wchar_t));
+        if (str == NULL)
+        {
+            return ref new String();
+        }
         memcpy(str, US.Buffer, US.Length);
         str[US.Length / sizeof(wchar_t)] = 0;
         String ^ ret = ref new String(str);
@@ -74,8 +82,7 @@ inline String ^
         return ret;
     }
 
-    inline String
-    ^
+inline String ^
     Str(const char *char_array) {
         std::string s_str = std::string(char_array);
         std::wstring wid_str = std::wstring(s_str.begin(), s_str.end());
@@ -83,15 +90,14 @@ inline String ^
         return ref new String(w_char);
     }
 
-    inline String
-    ^
+inline String ^
     ToLower(String ^ str) {
         std::wstring wid_str = str->Data();
         std::transform(wid_str.begin(), wid_str.end(), wid_str.begin(), ::tolower);
         return ref new String(wid_str.c_str());
     }
 
-    inline PEB *NtCurrentPeb()
+inline PEB *NtCurrentPeb()
 {
 #ifdef _M_X64
     return (PEB *)(__readgsqword(0x60));
