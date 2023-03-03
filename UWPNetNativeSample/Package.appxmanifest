@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+		 xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+		 xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+	     IgnorableNamespaces="uap mp">
+
+	<mp:PhoneIdentity PhoneProductId="a4e59667-7db7-46ec-b664-63517500e071" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+
+	<Identity
+	  Name="78cc1d58-b467-417a-ace0-24825a3c68c2"
+	  Publisher="CN=Gus"
+	  Version="1.0.0.0" />
+
+	<Properties>
+		<DisplayName>UWPNetNativeSample</DisplayName>
+		<PublisherDisplayName>Gus</PublisherDisplayName>
+		<Logo>Assets\StoreLogo.png</Logo>
+	</Properties>
+
+	<Dependencies>
+		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+	</Dependencies>
+
+	<Resources>
+		<Resource Language="x-generate"/>
+	</Resources>
+
+	<Applications>
+		<Application Id="App"
+		  Executable="$targetnametoken$.exe"
+		  EntryPoint="UWPNetNativeSample.App">
+			<uap:VisualElements
+			  DisplayName="UWPNetNativeSample"
+			  Square150x150Logo="Assets\Square150x150Logo.png"
+			  Square44x44Logo="Assets\Square44x44Logo.png"
+			  Description="UWPNetNativeSample"
+			  BackgroundColor="transparent">
+				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+				<uap:SplashScreen Image="Assets\SplashScreen.png" />
+			</uap:VisualElements>
+		</Application>
+	</Applications>
+</Package>
